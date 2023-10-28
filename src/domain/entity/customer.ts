@@ -1,6 +1,13 @@
+import EventDispatcher from "../event/@shared/event-dispatcher";
+import CustomerChangedAddressEvent from "../event/customer/customer-changed-address.event";
+import CustomerCreatedEvent from "../event/customer/customer-created.event";
+import EnviaConsoleLog1Handler from "../event/customer/handler/envia-console-log-1.handler";
+import EnviaConsoleLog2Handler from "../event/customer/handler/envia-console-log-2.handler";
+import EnviaConsoleLogHandler from "../event/customer/handler/envia-console-log.handler";
+import BaseEntity from "./@base-entity";
 import Address from "./address";
 
-export default class Customer {
+export default class Customer extends BaseEntity {
 
   private _id: string;
   private _name: string = "";
@@ -9,9 +16,16 @@ export default class Customer {
   private _rewardPoints: number = 0;
 
   constructor(id: string, name: string,) {
+    super();
     this._id = id;
     this._name = name;
     this.validate();
+
+    this._eventDispatcher.register("CustomerCreatedEvent", new EnviaConsoleLog1Handler());
+    this._eventDispatcher.register("CustomerCreatedEvent", new EnviaConsoleLog2Handler());
+    this._eventDispatcher.register("CustomerChangedAddressEvent", new EnviaConsoleLogHandler());
+  
+    this._eventDispatcher.notify(new CustomerCreatedEvent({}));
   }
 
   get name(): string {
@@ -45,6 +59,11 @@ export default class Customer {
 
   changeAddress(address: Address) {
     this._address = address;
+    this._eventDispatcher.notify(new CustomerChangedAddressEvent({
+      customerId: this._id,
+      customerName: this._name,
+      address: this._address.toString()
+    }))
   }
 
   isActive(): boolean {

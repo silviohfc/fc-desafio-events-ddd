@@ -1,3 +1,6 @@
+import EventDispatcher from "../event/@shared/event-dispatcher";
+import CustomerChangedAddressEvent from "../event/customer/customer-changed-address.event";
+import CustomerCreatedEvent from "../event/customer/customer-created.event";
 import Address from "./address";
 import Customer from "./customer";
 
@@ -51,5 +54,36 @@ describe("Customer unit tests", () => {
 
     customer.addRewardPoints(10);
     expect(customer.rewardPoints).toBe(20);
+  })
+
+  it('should notify an event when customer change address', () => {
+    jest.useFakeTimers().setSystemTime(new Date(2020, 9, 1, 7));
+    const notifySpy = jest.spyOn(EventDispatcher.prototype, 'notify');
+
+    const customer = new Customer("1", "Customer 1");
+    const address = new Address("Street 1", 123, "São Paulo", "13330-250");
+
+    customer.changeAddress(address);
+
+    expect(notifySpy).toBeCalledWith(new CustomerChangedAddressEvent({
+      customerId: customer.id,
+      customerName: customer.name,
+      address: address.toString()
+    }));
+
+    jest.setSystemTime(jest.getRealSystemTime());
+    jest.useRealTimers();
+  })
+
+  it('should notify an event when customer was created', () => {
+    jest.useFakeTimers().setSystemTime(new Date(2020, 9, 1, 7));
+    const notifySpy = jest.spyOn(EventDispatcher.prototype, 'notify');
+    
+    new Customer("1", "Customer 1");
+
+    expect(notifySpy).toBeCalledWith(new CustomerCreatedEvent({}));
+
+    jest.setSystemTime(jest.getRealSystemTime());
+    jest.useRealTimers();
   })
 })
